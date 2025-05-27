@@ -6,12 +6,24 @@ import { JsonEditor } from './JsonEditor';
 import { JsonViews } from './JsonViews';
 import { Base64Tools } from './Base64Tools';
 import { AiPanel } from './AiPanel';
+import { GitHubSync } from './GitHubSync';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 export function Layout() {
   const { state, dispatch } = useApp();
   const [activeSection, setActiveSection] = useState<'json' | 'base64'>('json');
+
+  const fadeTransition = {
+    hidden: { opacity: 0, y: 5 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.15, ease: "easeOut" }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,6 +37,7 @@ export function Layout() {
                   onClick={() => setActiveSection('json')}
                   variant={activeSection === 'json' ? 'default' : 'outline'}
                   size="sm"
+                  aria-label="Switch to JSON tools"
                 >
                   JSON Tools
                 </Button>
@@ -32,17 +45,33 @@ export function Layout() {
                   onClick={() => setActiveSection('base64')}
                   variant={activeSection === 'base64' ? 'default' : 'outline'}
                   size="sm"
+                  aria-label="Switch to Base64 tools"
                 >
                   Base64 Tools
                 </Button>
               </div>
-              <Button
-                onClick={() => dispatch({ type: 'TOGGLE_AI_PANEL' })}
-                variant={state.aiPanelOpen ? 'default' : 'outline'}
-                size="sm"
-              >
-                AI Q&A
-              </Button>
+              
+              <div className="flex gap-2">
+                <GitHubSync />
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => dispatch({ type: 'TOGGLE_AI_PANEL' })}
+                        variant={state.aiPanelOpen ? 'default' : 'outline'}
+                        size="sm"
+                        aria-label={state.aiPanelOpen ? 'Close AI Q&A panel' : 'Open AI Q&A panel'}
+                      >
+                        AI Q&A
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {state.aiPanelOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </div>
         </header>
@@ -52,14 +81,21 @@ export function Layout() {
             {activeSection === 'json' && <TabBar />}
             
             <main className="flex-1 p-6 overflow-y-auto">
-              {activeSection === 'json' ? (
-                <div>
-                  <JsonEditor />
-                  <JsonViews />
-                </div>
-              ) : (
-                <Base64Tools />
-              )}
+              <motion.div
+                key={activeSection}
+                variants={fadeTransition}
+                initial="hidden"
+                animate="visible"
+              >
+                {activeSection === 'json' ? (
+                  <div>
+                    <JsonEditor />
+                    <JsonViews />
+                  </div>
+                ) : (
+                  <Base64Tools />
+                )}
+              </motion.div>
             </main>
           </div>
 
