@@ -102,9 +102,39 @@ export function JsonViews() {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isTreeExpanded, setIsTreeExpanded] = useState(false);
   
-  if (!activeTab || !activeTab.isValid || !activeTab.parsedContent) {
-    return null;
-  }
+  // Move all useMemo and useCallback hooks to top level
+  const gridData = useMemo(() => {
+    if (!activeTab?.parsedContent) return [];
+    
+    const data = activeTab.parsedContent;
+    if (Array.isArray(data) && data.length > 0) {
+      return data;
+    } else if (typeof data === 'object' && data !== null) {
+      return Object.entries(data).map(([key, value]) => ({ key, value }));
+    }
+    return [data];
+  }, [activeTab?.parsedContent]);
+
+  const columnDefs: ColDef[] = useMemo(() => {
+    if (gridData.length === 0) return [];
+    
+    const keys = Object.keys(gridData[0]);
+    return keys.map(key => ({
+      field: key,
+      headerName: key.charAt(0).toUpperCase() + key.slice(1),
+      flex: 1,
+      sortable: true,
+      resizable: true,
+      filter: true,
+      cellRenderer: (params: any) => {
+        const value = params.value;
+        if (value && (typeof value === 'object' || Array.isArray(value))) {
+          return <ExpandableCellRenderer {...params} />;
+        }
+        return typeof value === 'string' ? value : JSON.stringify(value);
+      }
+    }));
+  }, [gridData]);
 
   const onGridReady = useCallback((params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -126,38 +156,27 @@ export function JsonViews() {
     setIsTreeExpanded(!isTreeExpanded);
   }, [isTreeExpanded]);
 
-  const renderGridView = (data: any) => {
-    // Convert data to grid format
-    const gridData = useMemo(() => {
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      } else if (typeof data === 'object' && data !== null) {
-        return Object.entries(data).map(([key, value]) => ({ key, value }));
-      }
-      return [data];
-    }, [data]);
+  const handleRowClicked = useCallback((event: any) => {
+    const keyboardEvent = event.event as KeyboardEvent;
+    if (keyboardEvent?.key === 'Enter') {
+      event.node.setExpanded(!event.node.expanded);
+    }
+  }, []);
 
-    const columnDefs: ColDef[] = useMemo(() => {
-      if (gridData.length === 0) return [];
-      
-      const keys = Object.keys(gridData[0]);
-      return keys.map(key => ({
-        field: key,
-        headerName: key.charAt(0).toUpperCase() + key.slice(1),
-        flex: 1,
-        sortable: true,
-        resizable: true,
-        filter: true,
-        cellRenderer: (params: any) => {
-          const value = params.value;
-          if (value && (typeof value === 'object' || Array.isArray(value))) {
-            return <ExpandableCellRenderer {...params} />;
-          }
-          return typeof value === 'string' ? value : JSON.stringify(value);
-        }
-      }));
-    }, [gridData]);
+  const handleCellKeyDown = useCallback((event: any) => {
+    const keyboardEvent = event.event as KeyboardEvent;
+    if (keyboardEvent?.key === 'ArrowLeft') {
+      gridApi?.collapseAll();
+    } else if (keyboardEvent?.key === 'ArrowRight') {
+      gridApi?.expandAll();
+    }
+  }, [gridApi]);
 
+  if (!activeTab || !activeTab.isValid || !activeTab.parsedContent) {
+    return null;
+  }
+
+  const renderGridView = () => {
     return (
       <div className="space-y-4">
         <div className="flex gap-2">
@@ -216,25 +235,15 @@ export function JsonViews() {
             rowHeight={36}
             animateRows={true}
             rowSelection="single"
-            onRowClicked={(event) => {
-              if (event.event?.key === 'Enter') {
-                event.node.setExpanded(!event.node.expanded);
-              }
-            }}
-            onCellKeyDown={(event) => {
-              if (event.event?.key === 'ArrowLeft') {
-                gridApi?.collapseAll();
-              } else if (event.event?.key === 'ArrowRight') {
-                gridApi?.expandAll();
-              }
-            }}
+            onRowClicked={handleRowClicked}
+            onCellKeyDown={handleCellKeyDown}
           />
         </div>
       </div>
     );
   };
 
-  const renderTreeView = (data: any) => {
+  const renderTreeView = () => {
     return (
       <div className="space-y-4">
         <div className="flex gap-2">
@@ -251,7 +260,7 @@ export function JsonViews() {
         
         <div className="font-mono text-sm border border-gray-200 rounded-lg p-4 bg-white">
           <ReactJson
-            src={data}
+            src={activeTab.parsedContent}
             theme="rjv-default"
             displayDataTypes={false}
             displayObjectSize={false}
@@ -289,7 +298,7 @@ export function JsonViews() {
         key={`grid-${activeTab.id}`}
       >
         <h3 className="text-lg font-medium mb-3 text-gray-900">Grid View</h3>
-        {renderGridView(activeTab.parsedContent)}
+        {renderGridView()}
       </motion.div>
     );
   }
@@ -304,7 +313,7 @@ export function JsonViews() {
         key={`tree-${activeTab.id}`}
       >
         <h3 className="text-lg font-medium mb-3 text-gray-900">Tree View</h3>
-        {renderTreeView(activeTab.parsedContent)}
+        {renderTreeView()}
       </motion.div>
     );
   }
