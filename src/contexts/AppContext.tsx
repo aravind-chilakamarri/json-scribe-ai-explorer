@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 
 export interface JsonTab {
   id: string;
@@ -26,9 +26,12 @@ type AppAction =
   | { type: 'UPDATE_TAB_NAME'; tabId: string; name: string }
   | { type: 'TOGGLE_AI_PANEL' }
   | { type: 'ADD_CHAT_MESSAGE'; message: { role: 'user' | 'assistant'; content: string } }
-  | { type: 'CLEAR_CHAT' };
+  | { type: 'CLEAR_CHAT' }
+  | { type: 'RESTORE_STATE'; state: Partial<AppState> };
 
-const initialState: AppState = {
+const STORAGE_KEY = 'json-toolkit-state';
+
+const defaultState: AppState = {
   tabs: [{
     id: '1',
     name: 'Tab 1',
@@ -42,8 +45,39 @@ const initialState: AppState = {
   chatHistory: []
 };
 
+function loadStateFromStorage(): AppState {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsedState = JSON.parse(stored);
+      // Ensure we have at least one tab
+      if (parsedState.tabs && parsedState.tabs.length > 0) {
+        return { ...defaultState, ...parsedState };
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load state from localStorage:', error);
+  }
+  return defaultState;
+}
+
+function saveStateToStorage(state: AppState) {
+  try {
+    const stateToSave = {
+      tabs: state.tabs,
+      activeTabId: state.activeTabId,
+      aiPanelOpen: state.aiPanelOpen
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  } catch (error) {
+    console.warn('Failed to save state to localStorage:', error);
+  }
+}
+
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'RESTORE_STATE':
+      return { ...state, ...action.state };
     case 'ADD_TAB':
       return {
         ...state,
@@ -127,7 +161,12 @@ const AppContext = createContext<{
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [state, dispatch] = useReducer(appReducer, defaultState, loadStateFromStorage);
+
+  // Save state to localStorage whenever tabs, activeTabId, or aiPanelOpen changes
+  useEffect(() => {
+    saveStateToStorage(state);
+  }, [state.tabs, state.activeTabId, state.aiPanelOpen]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
