@@ -1,6 +1,15 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+  ColumnDef,
+} from '@tanstack/react-table';
+import ReactJson from 'react-json-view';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function JsonViews() {
   const { state } = useApp();
@@ -12,94 +21,137 @@ export function JsonViews() {
 
   const renderGridView = (data: any) => {
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-      const keys = Object.keys(data[0]);
+      // Auto-generate columns from JSON keys
+      const columns = useMemo(() => {
+        const keys = Object.keys(data[0]);
+        return keys.map((key) => ({
+          accessorKey: key,
+          header: key,
+          cell: (info: any) => {
+            const value = info.getValue();
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          },
+        }));
+      }, [data]);
+
+      const table = useReactTable({
+        data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+      });
+
       return (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {keys.map((key) => (
-                  <th key={key} className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">
-                    {key}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row: any, index: number) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  {keys.map((key) => (
-                    <td key={key} className="px-4 py-2 text-sm text-gray-900 border-b">
-                      {typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key])}
-                    </td>
+        <div className="overflow-auto max-h-96 border border-gray-200 rounded-lg">
+          <Table>
+            <TableHeader className="sticky top-0 bg-white z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-gray-200">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="px-4 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row, index) => (
+                <TableRow 
+                  key={row.id} 
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       );
     } else if (typeof data === 'object' && data !== null) {
+      // Object view as key-value pairs
+      const entries = Object.entries(data);
+      const tableData = entries.map(([key, value]) => ({ key, value }));
+      
+      const columns = [
+        {
+          accessorKey: 'key',
+          header: 'Key',
+          cell: (info: any) => info.getValue(),
+        },
+        {
+          accessorKey: 'value',
+          header: 'Value',
+          cell: (info: any) => {
+            const value = info.getValue();
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          },
+        },
+      ];
+
+      const table = useReactTable({
+        data: tableData,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+      });
+
       return (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Key</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(data).map(([key, value]) => (
-                <tr key={key} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-sm font-medium text-gray-900 border-b">{key}</td>
-                  <td className="px-4 py-2 text-sm text-gray-900 border-b">
-                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                  </td>
-                </tr>
+        <div className="overflow-auto max-h-96 border border-gray-200 rounded-lg">
+          <Table>
+            <TableHeader className="sticky top-0 bg-white z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-gray-200">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="px-4 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row, index) => (
+                <TableRow 
+                  key={row.id} 
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       );
     }
     return <div className="text-gray-500">Grid view not available for this data type</div>;
   };
 
-  const renderTreeView = (data: any, level = 0) => {
-    if (typeof data !== 'object' || data === null) {
-      return <span className="text-gray-600">{JSON.stringify(data)}</span>;
-    }
-
-    if (Array.isArray(data)) {
-      return (
-        <div>
-          <span className="text-blue-600">[</span>
-          <div className="ml-4">
-            {data.map((item, index) => (
-              <div key={index} className="my-1">
-                <span className="text-gray-400">{index}:</span> {renderTreeView(item, level + 1)}
-              </div>
-            ))}
-          </div>
-          <span className="text-blue-600">]</span>
-        </div>
-      );
-    }
-
+  const renderTreeView = (data: any) => {
     return (
-      <div>
-        <span className="text-blue-600">{'{'}</span>
-        <div className="ml-4">
-          {Object.entries(data).map(([key, value]) => (
-            <div key={key} className="my-1">
-              <span className="text-purple-600">"{key}"</span>
-              <span className="text-gray-400">: </span>
-              {renderTreeView(value, level + 1)}
-            </div>
-          ))}
-        </div>
-        <span className="text-blue-600">{'}'}</span>
+      <div className="font-mono text-sm">
+        <ReactJson
+          src={data}
+          theme="rjv-default"
+          displayDataTypes={false}
+          displayObjectSize={false}
+          enableClipboard={false}
+          collapsed={1} // Expand Level 1 nodes by default
+          style={{
+            backgroundColor: 'transparent',
+            fontSize: '14px',
+          }}
+        />
       </div>
     );
   };
@@ -117,9 +169,7 @@ export function JsonViews() {
     return (
       <div className="mt-4 border border-gray-200 rounded-lg p-4">
         <h3 className="text-lg font-medium mb-3">Tree View</h3>
-        <div className="font-mono text-sm">
-          {renderTreeView(activeTab.parsedContent)}
-        </div>
+        {renderTreeView(activeTab.parsedContent)}
       </div>
     );
   }
