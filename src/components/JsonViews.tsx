@@ -26,15 +26,6 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
 
   const isArray = Array.isArray(value);
   const itemCount = isArray ? value.length : Object.keys(value).length;
-  const maxDepth = 5; // Prevent infinite nesting
-  
-  if (depth >= maxDepth) {
-    return (
-      <span className="text-blue-600 text-xs">
-        {isArray ? `Array(${itemCount})` : `Object(${itemCount})`} - Max depth reached
-      </span>
-    );
-  }
 
   const renderExpandedContent = () => {
     if (isArray) {
