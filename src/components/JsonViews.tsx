@@ -7,6 +7,7 @@ import ReactJson from 'react-json-view';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight, Expand, Shrink } from 'lucide-react';
 
 import 'ag-grid-community/styles/ag-grid.css';
@@ -53,31 +54,35 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
         );
 
         if (allItemsHaveSameStructure && keys.length > 0) {
-          // Render as structured table
+          // Render as structured table with horizontal scroll
           return (
             <div className="border border-gray-200 rounded mt-2">
-              <Table className="text-xs">
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    {keys.map(key => (
-                      <TableHead key={key} className="h-8 px-3 text-xs font-medium border-r last:border-r-0">
-                        {key}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {value.map((item, index) => (
-                    <TableRow key={index} className="hover:bg-gray-50">
-                      {keys.map(key => (
-                        <TableCell key={key} className="px-3 py-2 border-r last:border-r-0 align-top">
-                          <NestedObjectRenderer value={item[key]} depth={depth + 1} />
-                        </TableCell>
+              <ScrollArea className="w-full">
+                <div className="min-w-max">
+                  <Table className="text-xs">
+                    <TableHeader>
+                      <TableRow className="bg-gray-50">
+                        {keys.map(key => (
+                          <TableHead key={key} className="h-8 px-3 text-xs font-medium border-r last:border-r-0 whitespace-nowrap min-w-[120px]">
+                            {key}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {value.map((item, index) => (
+                        <TableRow key={index} className="hover:bg-gray-50">
+                          {keys.map(key => (
+                            <TableCell key={key} className="px-3 py-2 border-r last:border-r-0 align-top min-w-[120px]">
+                              <NestedObjectRenderer value={item[key]} depth={depth + 1} />
+                            </TableCell>
+                          ))}
+                        </TableRow>
                       ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
             </div>
           );
         }
@@ -86,24 +91,28 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
       // Fallback: render array items as rows
       return (
         <div className="border border-gray-200 rounded mt-2">
-          <Table className="text-xs">
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="h-8 px-3 text-xs font-medium w-20">Index</TableHead>
-                <TableHead className="h-8 px-3 text-xs font-medium">Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {value.map((item, index) => (
-                <TableRow key={index} className="hover:bg-gray-50">
-                  <TableCell className="px-3 py-2 font-mono text-gray-600 w-20">{index}</TableCell>
-                  <TableCell className="px-3 py-2 align-top">
-                    <NestedObjectRenderer value={item} depth={depth + 1} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ScrollArea className="w-full">
+            <div className="min-w-max">
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="h-8 px-3 text-xs font-medium w-20 whitespace-nowrap">Index</TableHead>
+                    <TableHead className="h-8 px-3 text-xs font-medium min-w-[200px] whitespace-nowrap">Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {value.map((item, index) => (
+                    <TableRow key={index} className="hover:bg-gray-50">
+                      <TableCell className="px-3 py-2 font-mono text-gray-600 w-20">{index}</TableCell>
+                      <TableCell className="px-3 py-2 align-top min-w-[200px]">
+                        <NestedObjectRenderer value={item} depth={depth + 1} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
         </div>
       );
     } else {
@@ -115,24 +124,28 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
 
       return (
         <div className="border border-gray-200 rounded mt-2">
-          <Table className="text-xs">
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="h-8 px-3 text-xs font-medium w-32">Key</TableHead>
-                <TableHead className="h-8 px-3 text-xs font-medium">Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map(([key, val]) => (
-                <TableRow key={key} className="hover:bg-gray-50">
-                  <TableCell className="px-3 py-2 font-mono text-blue-700 w-32 align-top">{key}</TableCell>
-                  <TableCell className="px-3 py-2 align-top">
-                    <NestedObjectRenderer value={val} depth={depth + 1} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ScrollArea className="w-full">
+            <div className="min-w-max">
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="h-8 px-3 text-xs font-medium w-32 whitespace-nowrap">Key</TableHead>
+                    <TableHead className="h-8 px-3 text-xs font-medium min-w-[200px] whitespace-nowrap">Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {entries.map(([key, val]) => (
+                    <TableRow key={key} className="hover:bg-gray-50">
+                      <TableCell className="px-3 py-2 font-mono text-blue-700 w-32 align-top">{key}</TableCell>
+                      <TableCell className="px-3 py-2 align-top min-w-[200px]">
+                        <NestedObjectRenderer value={val} depth={depth + 1} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
         </div>
       );
     }
@@ -203,6 +216,7 @@ export function JsonViews() {
       field: key,
       headerName: key.charAt(0).toUpperCase() + key.slice(1),
       flex: 1,
+      minWidth: 150,
       sortable: true,
       resizable: true,
       filter: true,
@@ -294,30 +308,34 @@ export function JsonViews() {
           </TooltipProvider>
         </div>
         
-        <div className="ag-theme-alpine border border-gray-200 rounded-lg" style={{ height: 500, width: '100%' }}>
-          <AgGridReact
-            rowData={gridData}
-            columnDefs={columnDefs}
-            onGridReady={onGridReady}
-            defaultColDef={{
-              flex: 1,
-              sortable: true,
-              resizable: true,
-              filter: true,
-              autoHeight: true,
-              wrapText: true,
-              cellStyle: { 
-                lineHeight: '1.4',
-                padding: '8px 12px'
-              }
-            }}
-            domLayout="autoHeight"
-            rowHeight={60}
-            animateRows={true}
-            rowSelection="single"
-            onRowClicked={handleRowClicked}
-            onCellKeyDown={handleCellKeyDown}
-          />
+        <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
+          <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
+            <AgGridReact
+              rowData={gridData}
+              columnDefs={columnDefs}
+              onGridReady={onGridReady}
+              defaultColDef={{
+                flex: 1,
+                minWidth: 150,
+                sortable: true,
+                resizable: true,
+                filter: true,
+                autoHeight: true,
+                wrapText: true,
+                cellStyle: { 
+                  lineHeight: '1.4',
+                  padding: '8px 12px'
+                }
+              }}
+              domLayout="autoHeight"
+              rowHeight={60}
+              animateRows={true}
+              rowSelection="single"
+              onRowClicked={handleRowClicked}
+              onCellKeyDown={handleCellKeyDown}
+              suppressHorizontalScroll={false}
+            />
+          </div>
         </div>
       </div>
     );
