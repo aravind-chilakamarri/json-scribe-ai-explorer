@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
@@ -54,10 +55,10 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
         );
 
         if (allItemsHaveSameStructure && keys.length > 0) {
-          // Render as structured table with horizontal scroll
+          // Render as structured table with both horizontal and vertical scroll
           return (
             <div className="border border-gray-200 rounded mt-2">
-              <ScrollArea className="w-full">
+              <ScrollArea className="w-full h-64">
                 <div className="min-w-max">
                   <Table className="text-xs">
                     <TableHeader>
@@ -88,10 +89,10 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
         }
       }
 
-      // Fallback: render array items as rows
+      // Fallback: render array items as rows with vertical scroll
       return (
         <div className="border border-gray-200 rounded mt-2">
-          <ScrollArea className="w-full">
+          <ScrollArea className="w-full h-64">
             <div className="min-w-max">
               <Table className="text-xs">
                 <TableHeader>
@@ -116,7 +117,7 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
         </div>
       );
     } else {
-      // Handle objects
+      // Handle objects with vertical scroll
       const entries = Object.entries(value);
       if (entries.length === 0) {
         return <div className="text-gray-500 text-sm p-2">Empty object</div>;
@@ -124,7 +125,7 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
 
       return (
         <div className="border border-gray-200 rounded mt-2">
-          <ScrollArea className="w-full">
+          <ScrollArea className="w-full h-64">
             <div className="min-w-max">
               <Table className="text-xs">
                 <TableHeader>
