@@ -18,6 +18,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const ExpandableCellRenderer = (params: any) => {
   const value = params.value;
   const isExpandable = value && (typeof value === 'object' || Array.isArray(value));
+  const [isExpanded, setIsExpanded] = useState(false);
   
   if (!isExpandable) {
     return typeof value === 'string' ? value : JSON.stringify(value);
@@ -26,11 +27,40 @@ const ExpandableCellRenderer = (params: any) => {
   const childCount = Array.isArray(value) ? value.length : Object.keys(value).length;
   
   return (
-    <div className="flex items-center gap-2">
-      <span className="truncate">
-        {Array.isArray(value) ? `Array` : 'Object'}
-        <span className="ml-1 text-xs bg-gray-200 px-1 rounded">({childCount})</span>
-      </span>
+    <div className="w-full">
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-blue-600 hover:text-blue-800 flex items-center"
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} nested data`}
+        >
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </button>
+        <span className="truncate">
+          {Array.isArray(value) ? `Array` : 'Object'}
+          <span className="ml-1 text-xs bg-gray-200 px-1 rounded">({childCount})</span>
+        </span>
+      </div>
+      
+      {isExpanded && (
+        <div className="mt-2 ml-6 p-2 bg-gray-50 rounded border-l-2 border-blue-200">
+          <ReactJson
+            src={value}
+            theme="rjv-default"
+            displayDataTypes={false}
+            displayObjectSize={false}
+            enableClipboard={false}
+            collapsed={1}
+            style={{
+              backgroundColor: 'transparent',
+              fontSize: '12px',
+            }}
+            name={false}
+            quotesOnKeys={false}
+            sortKeys={false}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -127,7 +157,8 @@ export function JsonViews() {
           return <ExpandableCellRenderer {...params} />;
         }
         return typeof value === 'string' ? value : JSON.stringify(value);
-      }
+      },
+      autoHeight: true
     }));
   }, [gridData]);
 
@@ -213,21 +244,15 @@ export function JsonViews() {
             rowData={gridData}
             columnDefs={columnDefs}
             onGridReady={onGridReady}
-            masterDetail={true}
-            detailCellRenderer={DetailCellRenderer}
-            isRowMaster={(dataItem: any) => {
-              return Object.values(dataItem).some(value => 
-                value && (typeof value === 'object' || Array.isArray(value))
-              );
-            }}
-            detailRowHeight={200}
             defaultColDef={{
               flex: 1,
               sortable: true,
               resizable: true,
-              filter: true
+              filter: true,
+              autoHeight: true
             }}
-            rowHeight={36}
+            domLayout="autoHeight"
+            rowHeight={50}
             animateRows={true}
             rowSelection="single"
             onRowClicked={handleRowClicked}
