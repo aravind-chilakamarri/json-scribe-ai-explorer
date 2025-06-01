@@ -27,13 +27,6 @@ const ExpandableCellRenderer = (params: any) => {
   
   return (
     <div className="flex items-center gap-2">
-      <button 
-        onClick={() => params.node.setExpanded(!params.node.expanded)}
-        className="text-blue-600 hover:text-blue-800 flex items-center"
-        aria-label={`${params.node.expanded ? 'Collapse' : 'Expand'} nested data`}
-      >
-        {params.node.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-      </button>
       <span className="truncate">
         {Array.isArray(value) ? `Array` : 'Object'}
         <span className="ml-1 text-xs bg-gray-200 px-1 rounded">({childCount})</span>
