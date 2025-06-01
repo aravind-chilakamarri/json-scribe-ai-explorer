@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
@@ -6,6 +7,7 @@ import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } f
 import ReactJson from 'react-json-view';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChevronDown, ChevronRight, Expand, Shrink } from 'lucide-react';
 
 import 'ag-grid-community/styles/ag-grid.css';
@@ -26,6 +28,114 @@ const ExpandableCellRenderer = (params: any) => {
 
   const childCount = Array.isArray(value) ? value.length : Object.keys(value).length;
   
+  const renderNestedTable = () => {
+    if (Array.isArray(value)) {
+      // For arrays, show each item as a row
+      if (value.length === 0) return <div className="text-gray-500 text-sm">Empty array</div>;
+      
+      // Check if array contains objects with consistent keys
+      const firstItem = value[0];
+      if (typeof firstItem === 'object' && firstItem !== null) {
+        const keys = Object.keys(firstItem);
+        const allItemsHaveSameKeys = value.every(item => 
+          typeof item === 'object' && item !== null && 
+          Object.keys(item).length === keys.length &&
+          keys.every(key => key in item)
+        );
+        
+        if (allItemsHaveSameKeys) {
+          // Render as table with columns for each key
+          return (
+            <Table className="text-xs">
+              <TableHeader>
+                <TableRow>
+                  {keys.map(key => (
+                    <TableHead key={key} className="h-8 px-2 text-xs font-medium">
+                      {key}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {value.map((item, index) => (
+                  <TableRow key={index} className="h-8">
+                    {keys.map(key => (
+                      <TableCell key={key} className="px-2 py-1">
+                        {typeof item[key] === 'object' && item[key] !== null ? 
+                          <span className="text-blue-600 text-xs">
+                            {Array.isArray(item[key]) ? `Array(${item[key].length})` : 'Object'}
+                          </span> :
+                          String(item[key])
+                        }
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          );
+        }
+      }
+      
+      // For simple arrays or mixed content
+      return (
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="h-8 px-2 text-xs font-medium">Index</TableHead>
+              <TableHead className="h-8 px-2 text-xs font-medium">Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {value.map((item, index) => (
+              <TableRow key={index} className="h-8">
+                <TableCell className="px-2 py-1 font-mono">{index}</TableCell>
+                <TableCell className="px-2 py-1">
+                  {typeof item === 'object' && item !== null ? 
+                    <span className="text-blue-600 text-xs">
+                      {Array.isArray(item) ? `Array(${item.length})` : 'Object'}
+                    </span> :
+                    String(item)
+                  }
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+    } else {
+      // For objects, show key-value pairs
+      const entries = Object.entries(value);
+      if (entries.length === 0) return <div className="text-gray-500 text-sm">Empty object</div>;
+      
+      return (
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="h-8 px-2 text-xs font-medium">Key</TableHead>
+              <TableHead className="h-8 px-2 text-xs font-medium">Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map(([key, val]) => (
+              <TableRow key={key} className="h-8">
+                <TableCell className="px-2 py-1 font-mono">{key}</TableCell>
+                <TableCell className="px-2 py-1">
+                  {typeof val === 'object' && val !== null ? 
+                    <span className="text-blue-600 text-xs">
+                      {Array.isArray(val) ? `Array(${val.length})` : 'Object'}
+                    </span> :
+                    String(val)
+                  }
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+    }
+  };
+  
   return (
     <div className="w-full">
       <div className="flex items-center gap-2">
@@ -43,22 +153,8 @@ const ExpandableCellRenderer = (params: any) => {
       </div>
       
       {isExpanded && (
-        <div className="mt-2 ml-6 p-2 bg-gray-50 rounded border-l-2 border-blue-200">
-          <ReactJson
-            src={value}
-            theme="rjv-default"
-            displayDataTypes={false}
-            displayObjectSize={false}
-            enableClipboard={false}
-            collapsed={1}
-            style={{
-              backgroundColor: 'transparent',
-              fontSize: '12px',
-            }}
-            name={false}
-            quotesOnKeys={false}
-            sortKeys={false}
-          />
+        <div className="mt-2 ml-6 p-2 bg-gray-50 rounded border-l-2 border-blue-200 max-h-64 overflow-auto">
+          {renderNestedTable()}
         </div>
       )}
     </div>
