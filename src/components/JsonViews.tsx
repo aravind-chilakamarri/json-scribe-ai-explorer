@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
@@ -8,7 +7,7 @@ import ReactJson from 'react-json-view';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight, Expand, Shrink } from 'lucide-react';
 
 import 'ag-grid-community/styles/ag-grid.css';
@@ -83,6 +82,8 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                     </TableBody>
                   </Table>
                 </div>
+                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="vertical" />
               </ScrollArea>
             </div>
           );
@@ -113,6 +114,8 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                 </TableBody>
               </Table>
             </div>
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </div>
       );
@@ -146,6 +149,8 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                 </TableBody>
               </Table>
             </div>
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </div>
       );
