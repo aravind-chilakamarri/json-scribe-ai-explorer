@@ -3,7 +3,9 @@ import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import ReactJson from 'react-json-view';
+// import ReactJson from 'react-json-view';
+import { JsonView } from 'react-json-view-lite';
+import 'react-json-view-lite/dist/index.css';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -354,21 +356,15 @@ export function JsonViews() {
         </div>
         
         <div className="font-mono text-sm border border-gray-200 rounded-lg p-4 bg-white">
-          <ReactJson
-            src={activeTab.parsedContent}
-            theme="rjv-default"
-            displayDataTypes={false}
-            displayObjectSize={false}
-            enableClipboard={false}
-            collapsed={isTreeExpanded ? false : 1}
+            <JsonView
+            data={activeTab.parsedContent}
+            expandLevel={isTreeExpanded ? Infinity : 1}
+            highlight={true}
             style={{
-              backgroundColor: 'transparent',
-              fontSize: '14px',
+            backgroundColor: 'transparent',
+            fontSize: '14px',
             }}
-            name={false}
-            quotesOnKeys={false}
-            sortKeys={false}
-          />
+            />
         </div>
       </div>
     );
