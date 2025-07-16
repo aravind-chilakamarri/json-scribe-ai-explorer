@@ -55,7 +55,7 @@ const flattenJsonData = (data: any, searchQuery: string = ''): JsonGridItem[] =>
         id: currentId,
         level,
         key,
-        value: `Array[${value.length}]`,
+        value: "",
         type: 'array',
         parentId,
         isExpanded: false,
@@ -74,7 +74,7 @@ const flattenJsonData = (data: any, searchQuery: string = ''): JsonGridItem[] =>
         id: currentId,
         level,
         key,
-        value: `Object{${entries.length}}`,
+        value: "",
         type: 'object',
         parentId,
         isExpanded: false,
@@ -190,7 +190,6 @@ export const JsonGridView: React.FC<JsonGridViewProps> = ({ data, searchQuery })
           <MoreHorizontal size={12} />
         </Button>
         <span className="text-blue-600 cursor-pointer" onClick={() => toggleExpanded(item.id)}>
-          {highlightText(String(item.value), searchQuery)}
         </span>
       </div>
     );
