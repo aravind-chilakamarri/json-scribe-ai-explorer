@@ -4,8 +4,9 @@ import { useApp } from '../contexts/AppContext';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 // import ReactJson from 'react-json-view';
-import { JsonView } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
+// import { JsonView } from 'react-json-view-lite';
+// import 'react-json-view-lite/dist/index.css';
+import { SearchableJsonTree } from './SearchableJsonTree';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -436,24 +437,11 @@ export function JsonViews() {
           </Button>
         </div>
         
-        <div className="font-mono text-sm border border-gray-200 rounded-lg p-4 bg-white">
-            {searchQuery ? (
-              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                <strong>Search active:</strong> "{searchQuery}" - Matching content highlighted below
-              </div>
-            ) : null}
-            <div className="json-highlight-search">
-              <style>
-                {searchQuery && `
-                  .json-highlight-search .string:contains("${searchQuery}") {
-                    background-color: #fef08a !important;
-                    padding: 2px 4px !important;
-                    border-radius: 2px !important;
-                  }
-                `}
-              </style>
-              <JsonView data={activeTab.parsedContent} />
-            </div>
+        <div className="border border-gray-200 rounded-lg bg-white">
+          <SearchableJsonTree 
+            data={activeTab.parsedContent} 
+            searchQuery={searchQuery}
+          />
         </div>
       </div>
     );
