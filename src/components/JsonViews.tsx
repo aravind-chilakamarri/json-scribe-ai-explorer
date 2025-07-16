@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-// import ReactJson from 'react-json-view';
 // import { JsonView } from 'react-json-view-lite';
 // import 'react-json-view-lite/dist/index.css';
 import { SearchableJsonTree } from './SearchableJsonTree';
+import { JsonGridView } from './JsonGridView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -379,35 +379,10 @@ export function JsonViews() {
           </TooltipProvider>
         </div>
         
-        <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
-          <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
-            <AgGridReact
-              rowData={filteredGridData}
-              columnDefs={columnDefs}
-              onGridReady={onGridReady}
-              defaultColDef={{
-                flex: 1,
-                minWidth: 150,
-                sortable: true,
-                resizable: true,
-                filter: true,
-                autoHeight: true,
-                wrapText: true,
-                cellStyle: { 
-                  lineHeight: '1.4',
-                  padding: '8px 12px'
-                }
-              }}
-              domLayout="autoHeight"
-              rowHeight={60}
-              animateRows={true}
-              rowSelection="single"
-              onRowClicked={handleRowClicked}
-              onCellKeyDown={handleCellKeyDown}
-              suppressHorizontalScroll={false}
-            />
-          </div>
-        </div>
+        <JsonGridView 
+          data={filteredGridData} 
+          searchQuery={searchQuery}
+        />
       </div>
     );
   };
