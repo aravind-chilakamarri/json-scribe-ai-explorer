@@ -7,10 +7,11 @@ import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } f
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ChevronDown, ChevronRight, Expand, Shrink } from 'lucide-react';
+import { ChevronDown, ChevronRight, Expand, Shrink, Search } from 'lucide-react';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -193,6 +194,7 @@ export function JsonViews() {
   const activeTab = state.tabs.find(tab => tab.id === state.activeTabId);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isTreeExpanded, setIsTreeExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Move all useMemo and useCallback hooks to top level
   const gridData = useMemo(() => {
@@ -266,6 +268,36 @@ export function JsonViews() {
     }
   }, [gridApi]);
 
+  // Filtered data based on search query for grid view
+  const filteredGridData = useMemo(() => {
+    if (!searchQuery) return gridData;
+    
+    return gridData.filter(row => {
+      return Object.values(row).some(value => {
+        const searchInValue = (val: any): boolean => {
+          if (typeof val === 'string') {
+            return val.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          if (typeof val === 'object' && val !== null) {
+            return Object.entries(val).some(([k, v]) => 
+              k.toLowerCase().includes(searchQuery.toLowerCase()) || searchInValue(v)
+            );
+          }
+          return String(val).toLowerCase().includes(searchQuery.toLowerCase());
+        };
+        return searchInValue(value);
+      });
+    });
+  }, [gridData, searchQuery]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
   if (!activeTab || !activeTab.isValid || !activeTab.parsedContent) {
     return null;
   }
@@ -273,7 +305,17 @@ export function JsonViews() {
   const renderGridView = () => {
     return (
       <div className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+            <Input
+              placeholder="Search across all columns..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -310,7 +352,7 @@ export function JsonViews() {
         <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
           <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
             <AgGridReact
-              rowData={gridData}
+              rowData={filteredGridData}
               columnDefs={columnDefs}
               onGridReady={onGridReady}
               defaultColDef={{
@@ -343,7 +385,17 @@ export function JsonViews() {
   const renderTreeView = () => {
     return (
       <div className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+            <Input
+              placeholder="Search keys and values..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
           <Button
             onClick={toggleTreeExpansion}
             variant="outline"
@@ -356,14 +408,13 @@ export function JsonViews() {
         </div>
         
         <div className="font-mono text-sm border border-gray-200 rounded-lg p-4 bg-white">
+            {searchQuery ? (
+              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                <strong>Search active:</strong> "{searchQuery}" - Results filtered below
+              </div>
+            ) : null}
             <JsonView
             data={activeTab.parsedContent}
-            expandLevel={isTreeExpanded ? Infinity : 1}
-            highlight={true}
-            style={{
-            backgroundColor: 'transparent',
-            fontSize: '14px',
-            }}
             />
         </div>
       </div>
