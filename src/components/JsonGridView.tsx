@@ -202,29 +202,6 @@ export const JsonGridView: React.FC<JsonGridViewProps> = ({ data, searchQuery })
         <ScrollArea className="w-full h-96">
           <div className="min-w-max">
             <Table className="text-sm">
-              <TableHeader className="sticky top-0 bg-gray-50 z-10">
-                <TableRow>
-                  <TableHead className="w-8"></TableHead>
-                  <TableHead className="min-w-[200px] border-r border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-blue-600">key</span>
-                      <Filter size={14} className="text-gray-400" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="min-w-[200px] border-r border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-blue-600">value</span>
-                      <Filter size={14} className="text-gray-400" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="min-w-[100px]">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-blue-600">type</span>
-                      <Filter size={14} className="text-gray-400" />
-                    </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {visibleItems.map((item, index) => (
                   <TableRow key={item.id} className="hover:bg-gray-50">
@@ -254,14 +231,9 @@ export const JsonGridView: React.FC<JsonGridViewProps> = ({ data, searchQuery })
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="border-r border-gray-100">
-                      {renderValue(item)}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-gray-600 text-xs bg-gray-100 px-2 py-1 rounded">
-                        {item.type === 'primitive' ? typeof item.value : item.type}
-                      </span>
-                    </TableCell>
+                     <TableCell>
+                       {renderValue(item)}
+                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
