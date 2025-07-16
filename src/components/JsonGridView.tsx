@@ -189,8 +189,6 @@ export const JsonGridView: React.FC<JsonGridViewProps> = ({ data, searchQuery })
         >
           <MoreHorizontal size={12} />
         </Button>
-        <span className="text-blue-600 cursor-pointer" onClick={() => toggleExpanded(item.id)}>
-        </span>
       </div>
     );
   };
