@@ -19,12 +19,31 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 // Register AG Grid modules
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// Helper function to highlight search matches
+const highlightText = (text: string, searchQuery: string) => {
+  if (!searchQuery) return text;
+  
+  const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return parts.map((part, index) => {
+    if (part.toLowerCase() === searchQuery.toLowerCase()) {
+      return <mark key={index} className="bg-yellow-200 text-black px-1 rounded">{part}</mark>;
+    }
+    return part;
+  });
+};
+
 // Recursive component for handling nested objects/arrays at any level
-const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number }) => {
+const NestedObjectRenderer = ({ value, depth = 0, searchQuery = '' }: { value: any; depth?: number; searchQuery?: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   if (!value || (typeof value !== 'object' && !Array.isArray(value))) {
-    return <span className="text-gray-700">{String(value)}</span>;
+    const text = String(value);
+    if (searchQuery && text.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return <span className="text-gray-700">{highlightText(text, searchQuery)}</span>;
+    }
+    return <span className="text-gray-700">{text}</span>;
   }
 
   const isArray = Array.isArray(value);
@@ -68,7 +87,7 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                         <TableRow key={index} className="hover:bg-gray-50">
                           {keys.map(key => (
                             <TableCell key={key} className="px-3 py-2 border-r last:border-r-0 align-top min-w-[120px]">
-                              <NestedObjectRenderer value={item[key]} depth={depth + 1} />
+                              <NestedObjectRenderer value={item[key]} depth={depth + 1} searchQuery={searchQuery} />
                             </TableCell>
                           ))}
                         </TableRow>
@@ -101,7 +120,7 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                     <TableRow key={index} className="hover:bg-gray-50">
                       <TableCell className="px-3 py-2 font-mono text-gray-600 w-20">{index}</TableCell>
                       <TableCell className="px-3 py-2 align-top min-w-[200px]">
-                        <NestedObjectRenderer value={item} depth={depth + 1} />
+                        <NestedObjectRenderer value={item} depth={depth + 1} searchQuery={searchQuery} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -134,9 +153,13 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
                 <TableBody>
                   {entries.map(([key, val]) => (
                     <TableRow key={key} className="hover:bg-gray-50">
-                      <TableCell className="px-3 py-2 font-mono text-blue-700 w-32 align-top">{key}</TableCell>
-                      <TableCell className="px-3 py-2 align-top min-w-[200px]">
-                        <NestedObjectRenderer value={val} depth={depth + 1} />
+                       <TableCell className="px-3 py-2 font-mono text-blue-700 w-32 align-top">
+                         {searchQuery && key.toLowerCase().includes(searchQuery.toLowerCase()) 
+                           ? highlightText(key, searchQuery) 
+                           : key}
+                       </TableCell>
+                       <TableCell className="px-3 py-2 align-top min-w-[200px]">
+                         <NestedObjectRenderer value={val} depth={depth + 1} searchQuery={searchQuery} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -181,12 +204,17 @@ const NestedObjectRenderer = ({ value, depth = 0 }: { value: any; depth?: number
 // Enhanced cell renderer that uses the recursive component
 const ExpandableCellRenderer = (params: any) => {
   const value = params.value;
+  const searchQuery = params.colDef?.cellRendererParams?.searchQuery || '';
   
   if (!value || (typeof value !== 'object' && !Array.isArray(value))) {
-    return <span className="text-gray-700">{typeof value === 'string' ? value : JSON.stringify(value)}</span>;
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    if (searchQuery && text.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return <span className="text-gray-700">{highlightText(text, searchQuery)}</span>;
+    }
+    return <span className="text-gray-700">{text}</span>;
   }
 
-  return <NestedObjectRenderer value={value} depth={0} />;
+  return <NestedObjectRenderer value={value} depth={0} searchQuery={searchQuery} />;
 };
 
 export function JsonViews() {
@@ -222,6 +250,7 @@ export function JsonViews() {
       resizable: true,
       filter: true,
       cellRenderer: ExpandableCellRenderer,
+      cellRendererParams: { searchQuery },
       autoHeight: true,
       wrapText: true,
       cellStyle: { 
@@ -230,7 +259,7 @@ export function JsonViews() {
         whiteSpace: 'normal'
       }
     }));
-  }, [gridData]);
+  }, [gridData, searchQuery]);
 
   const onGridReady = useCallback((params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -410,12 +439,21 @@ export function JsonViews() {
         <div className="font-mono text-sm border border-gray-200 rounded-lg p-4 bg-white">
             {searchQuery ? (
               <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                <strong>Search active:</strong> "{searchQuery}" - Results filtered below
+                <strong>Search active:</strong> "{searchQuery}" - Matching content highlighted below
               </div>
             ) : null}
-            <JsonView
-            data={activeTab.parsedContent}
-            />
+            <div className="json-highlight-search">
+              <style>
+                {searchQuery && `
+                  .json-highlight-search .string:contains("${searchQuery}") {
+                    background-color: #fef08a !important;
+                    padding: 2px 4px !important;
+                    border-radius: 2px !important;
+                  }
+                `}
+              </style>
+              <JsonView data={activeTab.parsedContent} />
+            </div>
         </div>
       </div>
     );
