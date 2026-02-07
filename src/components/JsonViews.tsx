@@ -7,6 +7,7 @@ import { ColDef, GridApi, GridReadyEvent, ModuleRegistry, AllCommunityModule } f
 // import 'react-json-view-lite/dist/index.css';
 import { SearchableJsonTree } from './SearchableJsonTree';
 import { JsonGridView } from './JsonGridView';
+import { JsonDiffView } from './JsonDiffView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -224,6 +225,8 @@ export function JsonViews() {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isTreeExpanded, setIsTreeExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandAllSignal, setExpandAllSignal] = useState(0);
+  const [collapseAllSignal, setCollapseAllSignal] = useState(0);
   
   // Move all useMemo and useCallback hooks to top level
   const gridData = useMemo(() => {
@@ -334,15 +337,15 @@ export function JsonViews() {
 
   const renderGridView = () => {
     return (
-      <div className="space-y-4">
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-col gap-3 h-full">
+        <div className="flex gap-2 items-center flex-shrink-0">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
               placeholder="Search across all columns..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9"
             />
           </div>
           
@@ -350,9 +353,10 @@ export function JsonViews() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={handleExpandAll}
+                  onClick={() => setExpandAllSignal(s => s + 1)}
                   variant="outline"
                   size="sm"
+                  className="h-9"
                   aria-label="Expand all rows"
                 >
                   <Expand size={16} />
@@ -366,9 +370,10 @@ export function JsonViews() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={handleCollapseAll}
+                  onClick={() => setCollapseAllSignal(s => s + 1)}
                   variant="outline"
                   size="sm"
+                  className="h-9"
                   aria-label="Collapse all rows"
                 >
                   <Shrink size={16} />
@@ -379,25 +384,29 @@ export function JsonViews() {
           </TooltipProvider>
         </div>
         
-        <JsonGridView 
-          data={filteredGridData} 
-          searchQuery={searchQuery}
-        />
+        <div className="flex-1 min-h-0">
+          <JsonGridView 
+            data={activeTab!.parsedContent} 
+            searchQuery={searchQuery}
+            expandAllSignal={expandAllSignal}
+            collapseAllSignal={collapseAllSignal}
+          />
+        </div>
       </div>
     );
   };
 
   const renderTreeView = () => {
     return (
-      <div className="space-y-4">
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-col gap-3 h-full">
+        <div className="flex gap-2 items-center flex-shrink-0">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
               placeholder="Search keys and values..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9"
             />
           </div>
           
@@ -405,6 +414,7 @@ export function JsonViews() {
             onClick={toggleTreeExpansion}
             variant="outline"
             size="sm"
+            className="h-9"
             aria-label={isTreeExpanded ? "Collapse all tree nodes" : "Expand all tree nodes"}
           >
             {isTreeExpanded ? <Shrink size={16} /> : <Expand size={16} />}
@@ -412,7 +422,7 @@ export function JsonViews() {
           </Button>
         </div>
         
-        <div className="border border-gray-200 rounded-lg bg-white">
+        <div className="flex-1 min-h-0 border border-slate-200 rounded-lg bg-white overflow-auto">
           <SearchableJsonTree 
             data={activeTab.parsedContent} 
             searchQuery={searchQuery}
@@ -423,24 +433,23 @@ export function JsonViews() {
   };
 
   const fadeInVariants = {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { opacity: 0, y: 5 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.15, ease: "easeOut" }
+      transition: { duration: 0.12, ease: "easeOut" }
     }
   };
 
   if (activeTab.activeView === 'grid') {
     return (
       <motion.div 
-        className="mt-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+        className="h-full flex flex-col"
         variants={fadeInVariants}
         initial="hidden"
         animate="visible"
         key={`grid-${activeTab.id}`}
       >
-        <h3 className="text-lg font-medium mb-3 text-gray-900">Grid View</h3>
         {renderGridView()}
       </motion.div>
     );
@@ -449,14 +458,27 @@ export function JsonViews() {
   if (activeTab.activeView === 'tree') {
     return (
       <motion.div 
-        className="mt-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+        className="h-full flex flex-col"
         variants={fadeInVariants}
         initial="hidden"
         animate="visible"
         key={`tree-${activeTab.id}`}
       >
-        <h3 className="text-lg font-medium mb-3 text-gray-900">Tree View</h3>
         {renderTreeView()}
+      </motion.div>
+    );
+  }
+
+  if (activeTab.activeView === 'diff') {
+    return (
+      <motion.div 
+        className="h-full flex flex-col"
+        variants={fadeInVariants}
+        initial="hidden"
+        animate="visible"
+        key={`diff-${activeTab.id}`}
+      >
+        <JsonDiffView />
       </motion.div>
     );
   }

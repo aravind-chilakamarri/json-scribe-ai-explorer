@@ -5,7 +5,7 @@ export interface JsonTab {
   id: string;
   name: string;
   content: string;
-  activeView: 'pretty' | 'minified' | 'grid' | 'tree';
+  activeView: 'pretty' | 'minified' | 'grid' | 'tree' | 'diff';
   isValid: boolean;
   parsedContent?: any;
 }
