@@ -332,6 +332,9 @@ export function JsonViews() {
     return null;
   }
 
+  const [expandAllSignal, setExpandAllSignal] = useState(0);
+  const [collapseAllSignal, setCollapseAllSignal] = useState(0);
+
   const renderGridView = () => {
     return (
       <div className="space-y-4">
@@ -350,7 +353,7 @@ export function JsonViews() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={handleExpandAll}
+                  onClick={() => setExpandAllSignal(s => s + 1)}
                   variant="outline"
                   size="sm"
                   aria-label="Expand all rows"
@@ -366,7 +369,7 @@ export function JsonViews() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={handleCollapseAll}
+                  onClick={() => setCollapseAllSignal(s => s + 1)}
                   variant="outline"
                   size="sm"
                   aria-label="Collapse all rows"
@@ -380,8 +383,10 @@ export function JsonViews() {
         </div>
         
         <JsonGridView 
-          data={filteredGridData} 
+          data={activeTab!.parsedContent} 
           searchQuery={searchQuery}
+          expandAllSignal={expandAllSignal}
+          collapseAllSignal={collapseAllSignal}
         />
       </div>
     );
